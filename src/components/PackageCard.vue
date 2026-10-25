@@ -1,6 +1,7 @@
 <!-- Render a card component for a bms package -->
 <template>
-  <div class="package-card" :class="{ 'package-card--expanded': isHoveringDetails }">
+  <div ref="rootRef" class="package-card" :class="{ 'package-card--expanded': detailsOpen }"
+    @mouseenter="cancelClose" @mouseleave="scheduleClose">
     <div class="card-row">
       <div class="card-thumb" :style="!backBMPURL ? { backgroundColor: '#2A2A2A' } : {}">
         <n-image v-if="backBMPURL" :src="backBMPURL" :width="100" :height="100" object-fit="cover"
@@ -18,7 +19,7 @@
             {{ humanFileSize(fileEntry.fileSize) }}
           </n-flex>
         </div>
-        <div class="meta-area" @mouseenter="isHoveringDetails = true" @mouseleave="isHoveringDetails = false">
+        <div class="meta-area" @mouseenter="scheduleOpen" @click="handleMetaClick">
           <n-tag v-for="item in modeDetails" :key="item.name" size="tiny" :color="item.color">
             {{ item.name }}
             <n-divider vertical style="margin: 2px;" />
@@ -32,8 +33,8 @@
       <n-icon size="36" :component="icons.download" color="white" />
     </div>
 
-    <transition name="fade">
-      <div v-if="isHoveringDetails" class="detail-list">
+    <transition name="details">
+      <div v-if="detailsOpen" class="detail-list">
         <div class="detail-item" v-for="item in songDetails" :key="item.id">
           <n-tag size="tiny" :color="item.color">
             {{ item.modeName }}
@@ -46,7 +47,7 @@
 </template>
 
 <script setup lang="tsx">
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { icons } from "@/utils/icons";
 import { humanFileSize } from '@/utils/format';
 import { getPlayModeColorSchema, type TagColor } from './tag';
@@ -56,7 +57,70 @@ const { fileEntry } = defineProps<{
   fileEntry: FileEntryDto
 }>()
 
-const isHoveringDetails = ref(false);
+const rootRef = ref<HTMLElement | null>(null);
+const detailsOpen = ref(false);
+const isTouch = window.matchMedia('(hover: none)').matches;
+
+let openTimer: ReturnType<typeof setTimeout> | null = null;
+let closeTimer: ReturnType<typeof setTimeout> | null = null;
+
+function cancelOpen() {
+  if (openTimer != null) {
+    clearTimeout(openTimer);
+    openTimer = null;
+  }
+}
+
+function cancelClose() {
+  if (closeTimer != null) {
+    clearTimeout(closeTimer);
+    closeTimer = null;
+  }
+}
+
+function scheduleOpen() {
+  cancelClose();
+  cancelOpen();
+  openTimer = setTimeout(() => {
+    detailsOpen.value = true;
+  }, 100);
+}
+
+function scheduleClose() {
+  cancelOpen();
+  cancelClose();
+  closeTimer = setTimeout(() => {
+    detailsOpen.value = false;
+  }, 220);
+}
+
+function handleMetaClick() {
+  if (!isTouch) {
+    return;
+  }
+  cancelOpen();
+  cancelClose();
+  detailsOpen.value = !detailsOpen.value;
+}
+
+function handleDocumentClick(e: MouseEvent) {
+  if (!isTouch || !detailsOpen.value) {
+    return;
+  }
+  if (rootRef.value && !rootRef.value.contains(e.target as Node)) {
+    detailsOpen.value = false;
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleDocumentClick);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleDocumentClick);
+  cancelOpen();
+  cancelClose();
+});
 
 export interface modeDetail {
   name: string,
@@ -269,6 +333,35 @@ function handleClickDownload() {
   top: 100%;
   left: -2px;
   z-index: 10;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.details-enter-active {
+  transition: opacity 180ms ease-out, transform 180ms ease-out;
+}
+
+.details-leave-active {
+  transition: opacity 140ms ease-out, transform 140ms ease-out;
+}
+
+.details-enter-from,
+.details-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .details-enter-active,
+  .details-leave-active {
+    transition: none;
+  }
+
+  .details-enter-from,
+  .details-leave-to {
+    transform: none;
+  }
 }
 
 .detail-item {
@@ -301,6 +394,17 @@ function handleClickDownload() {
 
 .hover-overlay:hover {
   background: rgba(0, 0, 0, 0.3);
+}
+
+@media (hover: none) {
+  .hover-overlay {
+    opacity: 1;
+    pointer-events: auto;
+    background: rgba(0, 0, 0, 0.25);
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 8px;
+  }
 }
 
 @media (max-width: 767px) {
