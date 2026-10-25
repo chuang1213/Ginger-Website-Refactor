@@ -1,7 +1,7 @@
 <!-- Render a card component for a bms package -->
 <template>
   <div ref="rootRef" class="package-card" :class="{ 'package-card--expanded': detailsOpen }"
-    @mouseenter="cancelClose" @mouseleave="scheduleClose">
+    @mouseenter="handleCardEnter" @mouseleave="scheduleClose">
     <div class="card-row">
       <div class="card-thumb" :style="!backBMPURL ? { backgroundColor: '#2A2A2A' } : {}">
         <n-image v-if="backBMPURL" :src="backBMPURL" :width="100" :height="100" object-fit="cover"
@@ -19,10 +19,10 @@
             {{ humanFileSize(fileEntry.fileSize) }}
           </n-flex>
         </div>
-        <div class="meta-area" @mouseenter="scheduleOpen" @click="handleMetaClick">
+        <div class="meta-area" @click="handleMetaClick">
           <n-tag v-for="item in modeDetails" :key="item.name" size="tiny" :color="item.color">
             {{ item.name }}
-            <n-divider vertical style="margin: 2px;" />
+            <n-divider vertical />
             {{ item.count }}
           </n-tag>
         </div>
@@ -35,6 +35,7 @@
 
     <transition name="details">
       <div v-if="detailsOpen" class="detail-list">
+        <div class="detail-title">{{ fileEntry.fileName }}</div>
         <div class="detail-item" v-for="item in songDetails" :key="item.id">
           <n-tag size="tiny" :color="item.color">
             {{ item.modeName }}
@@ -92,6 +93,13 @@ function scheduleClose() {
   closeTimer = setTimeout(() => {
     detailsOpen.value = false;
   }, 220);
+}
+
+function handleCardEnter() {
+  if (isTouch) {
+    return;
+  }
+  scheduleOpen();
 }
 
 function handleMetaClick() {
@@ -263,6 +271,7 @@ function handleClickDownload() {
 .card-row {
   display: flex;
   flex-shrink: 0;
+  width: 100%;
   height: 100px;
 }
 
@@ -275,6 +284,7 @@ function handleClickDownload() {
 .card-body {
   display: flex;
   flex: 1;
+  min-width: 0;
   flex-direction: column;
   position: relative;
   background-size: cover;
@@ -297,12 +307,33 @@ function handleClickDownload() {
   z-index: 1;
   color: white;
   margin: 5px 5px;
+  min-width: 0;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
   overflow-y: auto;
 }
 
 .overlay :deep(h3) {
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta-area :deep(.n-tag),
+.detail-list :deep(.n-tag) {
+  padding: 0 10px;
+  border-radius: 999px;
+}
+
+.meta-area :deep(.n-tag__content),
+.detail-list :deep(.n-tag__content) {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.meta-area :deep(.n-divider),
+.detail-list :deep(.n-divider) {
+  margin: 0;
 }
 
 .meta-area {
@@ -368,6 +399,14 @@ function handleClickDownload() {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.detail-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #333;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .hover-overlay {
