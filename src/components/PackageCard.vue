@@ -273,15 +273,25 @@ function handleClickDownload() {
 
 .card-row {
   display: flex;
-  flex-shrink: 0;
+  flex: 1 0 auto;
   width: 100%;
-  height: 100px;
+  min-height: 100px;
 }
 
 .card-thumb {
+  position: relative;
   width: 100px;
-  height: 100px;
+  height: auto;
+  align-self: stretch;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.card-thumb :deep(.n-image) {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .card-body {
@@ -312,7 +322,7 @@ function handleClickDownload() {
   margin: 5px 5px;
   min-width: 0;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-  overflow-y: auto;
+  overflow: visible;
 }
 
 .overlay :deep(h3) {
@@ -473,18 +483,16 @@ function handleClickDownload() {
 }
 
 @media (max-width: 767px) {
+  .package-card {
+    min-height: 80px;
+  }
+
   .card-row {
-    height: 80px;
+    min-height: 80px;
   }
 
   .card-thumb {
     width: 80px;
-    height: 80px;
-  }
-
-  .card-thumb :deep(.n-image) {
-    width: 80px !important;
-    height: 80px !important;
   }
 }
 </style>
