@@ -14,8 +14,8 @@
 <template>
   <!-- Search Area -->
   <n-flex gap="8" vertical>
-    <n-flex gap="8" horizontal :wrap="false">
-      <n-input-group>
+    <n-flex gap="8" horizontal class="search-row">
+      <n-input-group class="search-input">
         <n-input v-model:value="fuzzyKeyword" clearable :placeholder="t('placeholder.searchFuzzyKeyword')">
           <template #prefix>
             <n-icon :component="SearchIcon" />
@@ -33,7 +33,7 @@
       </n-button>
     </n-flex>
     <template v-if="useAdvancedSearch">
-      <n-input-group>
+      <n-input-group class="advanced-group">
         <n-input v-model:value="titleLike" clearable :placeholder="t('placeholder.searchFuzzyTitle')" />
         <n-input v-model:value="artistLike" clearable :placeholder="t('placeholder.searchFuzzyArtist')" />
       </n-input-group>
@@ -42,10 +42,10 @@
 
   <!-- data table -->
   <div style="margin-top: 8px;">
-    <n-data-table v-if="disableCard" remote :loading="loading" :columns="columns" :data="data" :pagination="pagination"
-      :row-key="(row: FileEntryDto) => row.downloadURL" striped />
+    <n-data-table v-if="disableCard" remote :loading="loading" :columns="columns" :data="data" :scroll-x="900"
+      :pagination="pagination" :row-key="(row: FileEntryDto) => row.downloadURL" striped />
     <n-card v-else>
-      <n-data-table remote :loading="loading" :columns="columns" :data="data" :pagination="pagination"
+      <n-data-table remote :loading="loading" :columns="columns" :data="data" :scroll-x="900" :pagination="pagination"
         :row-key="(row: FileEntryDto) => row.downloadURL" striped />
     </n-card>
   </div>
@@ -224,3 +224,31 @@ watch([() => props.tableID, fuzzyKeyword, titleLike, artistLike], () => {
   debouncedLoadData();
 }, { immediate: true });
 </script>
+
+<style scoped>
+.search-row .search-input {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.advanced-group {
+  display: flex;
+}
+
+@media (max-width: 767px) {
+  .search-row .search-input {
+    flex: 1 1 100%;
+  }
+
+  .advanced-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .advanced-group :deep(.n-input) {
+    width: 100%;
+    margin-left: 0;
+    border-radius: 8px !important;
+  }
+}
+</style>
