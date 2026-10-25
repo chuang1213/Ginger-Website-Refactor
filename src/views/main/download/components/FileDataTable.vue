@@ -65,6 +65,16 @@
       </div>
     </template>
   </template>
+
+  <!-- placeholder so a pending first search gives immediate feedback -->
+  <template v-else-if="loading">
+    <div v-if="useCardView" class="cards-grid">
+      <n-skeleton v-for="i in 6" :key="i" height="100px" :sharp="false" />
+    </div>
+    <n-flex v-else vertical :size="8" style="margin-top: 8px;">
+      <n-skeleton v-for="i in 5" :key="i" height="40px" :sharp="false" />
+    </n-flex>
+  </template>
 </template>
 
 <script lang="tsx" setup>
@@ -207,6 +217,7 @@ async function loadData() {
 
 function clickSearch() {
   debouncedLoadData.cancel();
+  loading.value = true;
   pendingFresh = true;
   pagination.page = 1;
   loadData();
@@ -242,6 +253,12 @@ watch([() => props.tableID, fuzzyKeyword, fileNameLike, titleLike, artistLike, u
 
 .cards-grid > * {
   min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .scroll-container {
