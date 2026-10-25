@@ -2,8 +2,8 @@
 <template>
   <!-- Search Area -->
   <n-flex gap="8" vertical>
-    <n-flex gap="8" horizontal :wrap="false">
-      <n-input-group>
+    <n-flex gap="8" horizontal class="search-row">
+      <n-input-group class="search-input">
         <n-input v-model:value="fuzzyKeyword" clearable :placeholder="t('placeholder.searchFuzzyKeyword')" autofocus>
           <template #prefix>
             <n-icon :component="icons.search" />
@@ -30,7 +30,7 @@
       </n-button>
     </n-flex>
     <template v-if="useAdvancedSearch">
-      <n-input-group>
+      <n-input-group class="advanced-group">
         <n-input v-model:value="fileNameLike" clearable :placeholder="t('placeholder.searchFuzzyFileName')" />
         <n-input v-model:value="titleLike" clearable :placeholder="t('placeholder.searchFuzzyTitle')" />
         <n-input v-model:value="artistLike" clearable :placeholder="t('placeholder.searchFuzzyArtist')" />
@@ -44,21 +44,19 @@
       <div class="scroll-container">
         <n-infinite-scroll :distance="100" @load="loadData">
           <n-spin :show="loading">
-            <n-grid cols="1 m:2 l:2" item-responsive responsive="screen">
-              <n-gi v-for="item in data" :key="item.id">
-                <PackageCard :fileEntry="item" />
-              </n-gi>
-            </n-grid>
+            <div class="cards-grid">
+              <PackageCard v-for="item in data" :key="item.id" :fileEntry="item" />
+            </div>
           </n-spin>
           <n-divider v-if="noMore" />
         </n-infinite-scroll>
       </div>
     </template>
     <template v-else>
-      <n-data-table v-if="disableCard" remote :loading="loading" :columns="columns" :data="data"
+      <n-data-table v-if="disableCard" remote :loading="loading" :columns="columns" :data="data" :scroll-x="640"
         :pagination="pagination" rowClassName="common-row" :row-key="(row: FileEntryDto) => row.downloadURL" striped />
       <n-card v-else>
-        <n-data-table remote :loading="loading" :columns="columns" :data="data" :pagination="pagination"
+        <n-data-table remote :loading="loading" :columns="columns" :data="data" :scroll-x="640" :pagination="pagination"
           rowClassName="common-row" :row-key="(row: FileEntryDto) => row.downloadURL" striped />
       </n-card>
     </template>
@@ -212,10 +210,47 @@ watch([() => props.tableID, fuzzyKeyword, fileNameLike, titleLike, artistLike, u
   padding: 0 !important;
 }
 
+.search-row .search-input {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.advanced-group {
+  display: flex;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.cards-grid > * {
+  min-width: 0;
+}
+
 .scroll-container {
   margin-top: 8px;
-  flex: 1;
-  overflow-y: auto;
-  height: 130vh;
+}
+
+@media (max-width: 767px) {
+  .search-row .search-input {
+    flex: 1 1 100%;
+  }
+
+  .advanced-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .advanced-group :deep(.n-input) {
+    width: 100%;
+    margin-left: 0;
+    border-radius: 8px !important;
+  }
+
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

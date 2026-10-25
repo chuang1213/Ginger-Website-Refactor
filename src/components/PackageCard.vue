@@ -237,13 +237,19 @@ function handleClickDownload() {
   overflow-y: auto;
 }
 
+.overlay :deep(h3) {
+  overflow-wrap: anywhere;
+}
+
 .meta-area {
-  height: 20px;
+  min-height: 20px;
   flex-shrink: 0;
   z-index: 6;
   display: flex;
   align-items: center;
-  padding-left: 5px;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 5px;
 }
 
 .detail-list {
@@ -295,5 +301,21 @@ function handleClickDownload() {
 
 .hover-overlay:hover {
   background: rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 767px) {
+  .card-row {
+    height: 80px;
+  }
+
+  .card-thumb {
+    width: 80px;
+    height: 80px;
+  }
+
+  .card-thumb :deep(.n-image) {
+    width: 80px !important;
+    height: 80px !important;
+  }
 }
 </style>
