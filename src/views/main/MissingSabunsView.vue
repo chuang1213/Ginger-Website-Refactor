@@ -2,8 +2,8 @@
   <TitleWithButtons :title="t('title.missingSabuns')" />
   <!-- Search Area -->
   <n-flex gap="8" vertical>
-    <n-flex gap="8" horizontal :wrap="false">
-      <n-input-group>
+    <n-flex gap="8" horizontal>
+      <n-input-group class="missing-search">
         <n-input v-model:value="titleLike" clearable :placeholder="t('placeholder.searchFuzzyTitle')">
           <template #prefix>
             <n-icon :component="icons.search" />
@@ -19,7 +19,7 @@
   </n-flex>
 
   <n-card>
-    <n-data-table remote :loading="loading" :data="data" :columns="columns" :pagination="pagination"
+    <n-data-table remote :loading="loading" :data="data" :columns="columns" :scroll-x="900" :pagination="pagination"
       :row-key="(row: MissingTableData) => row.id" />
   </n-card>
 
@@ -159,3 +159,29 @@ watch([titleLike, urlStrategy, tableID], () => {
   loadData();
 });
 </script>
+
+<style scoped>
+.missing-search {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .missing-search {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .missing-search :deep(.n-input),
+  .missing-search :deep(.n-base-selection) {
+    width: 100%;
+    margin-left: 0;
+    border-radius: 8px !important;
+  }
+
+  .missing-search :deep(.n-button) {
+    margin-left: 0;
+    border-radius: 8px !important;
+  }
+}
+</style>
