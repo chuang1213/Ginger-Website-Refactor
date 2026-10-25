@@ -29,13 +29,15 @@
         </template>
       </n-button>
     </n-flex>
-    <template v-if="useAdvancedSearch">
-      <n-input-group class="advanced-group">
-        <n-input v-model:value="fileNameLike" clearable :placeholder="t('placeholder.searchFuzzyFileName')" />
-        <n-input v-model:value="titleLike" clearable :placeholder="t('placeholder.searchFuzzyTitle')" />
-        <n-input v-model:value="artistLike" clearable :placeholder="t('placeholder.searchFuzzyArtist')" />
-      </n-input-group>
-    </template>
+    <div class="advanced-wrap" :class="{ 'advanced-wrap--open': useAdvancedSearch }">
+      <div class="advanced-inner">
+        <n-input-group class="advanced-group">
+          <n-input v-model:value="fileNameLike" clearable :placeholder="t('placeholder.searchFuzzyFileName')" />
+          <n-input v-model:value="titleLike" clearable :placeholder="t('placeholder.searchFuzzyTitle')" />
+          <n-input v-model:value="artistLike" clearable :placeholder="t('placeholder.searchFuzzyArtist')" />
+        </n-input-group>
+      </div>
+    </div>
   </n-flex>
 
   <!-- data table, auto hide itself if no data -->
@@ -44,7 +46,7 @@
       <div class="scroll-container">
         <n-infinite-scroll :distance="100" @load="loadData">
           <n-spin :show="loading">
-            <div class="cards-grid">
+            <div class="cards-grid results-anim" :key="resultAnimKey">
               <PackageCard v-for="item in data" :key="item.id" :fileEntry="item" />
             </div>
           </n-spin>
@@ -53,12 +55,14 @@
       </div>
     </template>
     <template v-else>
-      <n-data-table v-if="disableCard" remote :loading="loading" :columns="columns" :data="data" :scroll-x="640"
-        :pagination="pagination" rowClassName="common-row" :row-key="(row: FileEntryDto) => row.downloadURL" striped />
-      <n-card v-else>
-        <n-data-table remote :loading="loading" :columns="columns" :data="data" :scroll-x="640" :pagination="pagination"
-          rowClassName="common-row" :row-key="(row: FileEntryDto) => row.downloadURL" striped />
-      </n-card>
+      <div class="results-anim" :key="resultAnimKey">
+        <n-data-table v-if="disableCard" remote :loading="loading" :columns="columns" :data="data" :scroll-x="640"
+          :pagination="pagination" rowClassName="common-row" :row-key="(row: FileEntryDto) => row.downloadURL" striped />
+        <n-card v-else>
+          <n-data-table remote :loading="loading" :columns="columns" :data="data" :scroll-x="640" :pagination="pagination"
+            rowClassName="common-row" :row-key="(row: FileEntryDto) => row.downloadURL" striped />
+        </n-card>
+      </div>
     </template>
   </template>
 </template>
@@ -84,6 +88,11 @@ const props = defineProps<{
 
 const loading: Ref<boolean> = ref(false);
 const noMore: Ref<boolean> = ref(false);
+
+// Bumped only when results are fully replaced (new query / view switch), so the
+// enter animation never replays on infinite-scroll appends.
+const resultAnimKey = ref(0);
+let pendingFresh = true;
 
 // searching parameters
 const fuzzyKeyword: Ref<string | null> = ref(null);
@@ -186,20 +195,26 @@ async function loadData() {
       if (result.data.length < pagination.pageSize) {
         noMore.value = true;
       }
+      if (pendingFresh) {
+        resultAnimKey.value += 1;
+      }
     }
   } finally {
     loading.value = false;
+    pendingFresh = false;
   }
 }
 
 function clickSearch() {
   debouncedLoadData.cancel();
+  pendingFresh = true;
   pagination.page = 1;
   loadData();
 }
 
 watch([() => props.tableID, fuzzyKeyword, fileNameLike, titleLike, artistLike, useCardView], () => {
   loading.value = true;
+  pendingFresh = true;
   pagination.page = 1;
   debouncedLoadData();
 });
@@ -231,6 +246,52 @@ watch([() => props.tableID, fuzzyKeyword, fileNameLike, titleLike, artistLike, u
 
 .scroll-container {
   margin-top: 8px;
+}
+
+.advanced-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition: grid-template-rows 200ms ease-out, visibility 0s linear 200ms;
+}
+
+.advanced-wrap--open {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition: grid-template-rows 200ms ease-out, visibility 0s;
+}
+
+.advanced-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.results-anim {
+  animation: results-in 180ms ease-out;
+}
+
+@keyframes results-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .advanced-wrap,
+  .advanced-wrap--open {
+    transition: none;
+  }
+
+  .results-anim {
+    animation: none;
+  }
 }
 
 @media (max-width: 767px) {
