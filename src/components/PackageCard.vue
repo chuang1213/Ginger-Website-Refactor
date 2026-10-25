@@ -20,11 +20,14 @@
           </n-flex>
         </div>
         <div class="meta-area" @click="handleMetaClick">
-          <n-tag v-for="item in modeDetails" :key="item.name" size="tiny" :color="item.color">
-            {{ item.name }}
-            <n-divider vertical />
-            {{ item.count }}
-          </n-tag>
+          <span class="mode-chip" v-for="item in modeDetails" :key="item.name" :style="{
+            '--chip-bg': item.color.color,
+            '--chip-text': item.color.textColor,
+            '--chip-border': item.color.borderColor,
+          }">
+            <span class="mode-chip__name">{{ item.name }}</span>
+            <span class="mode-chip__count">{{ item.count }}</span>
+          </span>
         </div>
       </div>
     </div>
@@ -318,22 +321,45 @@ function handleClickDownload() {
   text-overflow: ellipsis;
 }
 
-.meta-area :deep(.n-tag),
 .detail-list :deep(.n-tag) {
   padding: 0 10px;
   border-radius: 999px;
 }
 
-.meta-area :deep(.n-tag__content),
 .detail-list :deep(.n-tag__content) {
   display: inline-flex;
   align-items: center;
   gap: 4px;
 }
 
-.meta-area :deep(.n-divider),
-.detail-list :deep(.n-divider) {
-  margin: 0;
+.mode-chip {
+  display: inline-flex;
+  align-items: stretch;
+  height: 18px;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--chip-text, #68717B);
+  background: var(--chip-bg, #E3E5E7);
+  border: 1px solid var(--chip-border, #68717B);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.mode-chip__name {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 999px 0 0 999px;
+}
+
+.mode-chip__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  padding: 0 7px;
+  border-radius: 0 999px 999px 0;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.08));
 }
 
 .meta-area {
@@ -344,7 +370,7 @@ function handleClickDownload() {
   align-items: center;
   flex-wrap: wrap;
   gap: 4px;
-  padding: 0 5px;
+  padding: 0 5px 5px;
 }
 
 .detail-list {
